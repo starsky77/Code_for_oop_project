@@ -13,7 +13,7 @@ using namespace std;
 class Entity
 {
 public:
-	virtual void Render(int camX, int camY) = 0;
+	virtual void Render(int camX, int camY, int size = 1) = 0;
 
 	//Position accessors
 	int GetPosX();
@@ -23,6 +23,9 @@ public:
 protected:
 	//The X and Y offsets of the dot
 	int mPosX, mPosY;
+	//if need to draw
+	int x, y;//the location in the windows
+	int w, h;//height,width
 
 };
 
@@ -48,12 +51,14 @@ protected:
 class StaticObj :Entity
 {
 public:
-	virtual void Render(int camX, int camY);
-	StaticObj();
+	void Render(int camX, int camY, int size = 1);
+	StaticObj(const char* file);
 	~StaticObj();
 
 private:
-
+	SDL_Rect rect;
+	SDL_Surface* imag = NULL;
+	SDL_Texture* tex = NULL;
 };
 
 class Role :MoveObj
@@ -67,7 +72,7 @@ private:
 };
 
 
-class Player:Role
+class Player :Role
 {
 public:
 	Player();
