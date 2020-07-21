@@ -6,8 +6,23 @@
 #include <stdio.h>
 #include <string>
 #include<iostream>
+#include"Utils.h"
 
 using namespace std;
+
+
+extern const int LEVEL_WIDTH;
+extern const int LEVEL_HEIGHT;
+extern const int SCREEN_WIDTH;
+extern const int SCREEN_HEIGHT;
+extern const int SCREEN_FPS;
+extern const int SCREEN_TICK_PER_FRAME;
+
+extern SDL_Window* gWindow;
+extern SDL_Renderer* gRenderer;
+extern LTexture gBGTexture;
+
+
 
 enum KeyPressSurfaces
 {
@@ -17,49 +32,6 @@ enum KeyPressSurfaces
 	KEY_PRESS_SURFACE_UP,
 	KEY_PRESS_SURFACE_TOTAL
 };
-
-//Texture wrapper class
-class LTexture
-{
-public:
-	//Initializes variables
-	LTexture();
-
-	//Deallocates memory
-	~LTexture();
-
-	//Loads image at specified path
-	bool loadFromFile(std::string path);
-
-	//Deallocates texture
-	void free();
-
-	//Set color modulation
-	void setColor(Uint8 red, Uint8 green, Uint8 blue);
-
-	//Set blending
-	void setBlendMode(SDL_BlendMode blending);
-
-	//Set alpha modulation
-	void setAlpha(Uint8 alpha);
-
-	//Renders texture at given point
-	void render(int x, int y, SDL_Rect* clip = NULL);
-
-	//Gets image dimensions
-	int getWidth();
-	int getHeight();
-
-private:
-	//The actual hardware texture
-	SDL_Texture* mTexture;
-
-	//Image dimensions
-	int mWidth;
-	int mHeight;
-};
-
-
 
 
 class Entity
