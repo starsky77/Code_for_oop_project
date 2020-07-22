@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string>
 #include<iostream>
+#include<fstream>
 #include"Utils.h"
 
 using namespace std;
@@ -37,35 +38,47 @@ enum KeyPressSurfaces
 class Entity
 {
 public:
-	//virtual void Render(int camX, int camY, int size = 1) = 0;
-
-	//Position accessors
-	virtual int GetPosX();
-	virtual int GetPosY();
-	virtual int GetW();
-	virtual int GetH();
+	SDL_Rect getBox();
+	virtual void Render(SDL_Rect& camera) = 0;
 
 protected:
-	//The X and Y offsets of the dot
-	int mPosX, mPosY;//the location in the windows
-	int w, h;//height,width
+	//Collision box of the Entity
+	SDL_Rect mBox;
 
 };
+
+class Tile :public Entity
+{
+public:
+	//Initializes position and type
+	Tile(int x, int y, int tileType);
+
+	//Shows the tile
+	virtual  void Render(SDL_Rect& camera);
+
+	//Get the tile type
+	int getType();
+
+
+private:
+	//The tile type
+	int mType;
+};
+
+
 
 
 class StaticObj :public Entity
 {
 public:
-	void Render(int camX, int camY);
+	virtual void Render(SDL_Rect& camera);
 	void SetPos(int x, int y);
 	StaticObj(const char* file);
+	StaticObj(int x, int y, int tileType);
 	~StaticObj();
-
 private:
 	LTexture StaticObjTex;
-	SDL_Rect rect;
-	SDL_Surface* imag = NULL;
-	SDL_Texture* tex = NULL;
+
 };
 
 
@@ -75,9 +88,10 @@ public:
 	MoveObj(const char* file, int w, int h);
 	~MoveObj();
 
-	virtual void Move();
-	virtual void Render(int camX, int camY);
+	virtual void Move(Tile* tiles[]);
+	virtual void Render(SDL_Rect& camera);
 	void handleEvent(SDL_Event& e);
+	void setCamera(SDL_Rect& camera);
 
 	int frame;
 
@@ -105,7 +119,6 @@ protected:
 	//Indicates the current direction
 	KeyPressSurfaces curDirection;
 	bool isMoving;
-
 };
 
 /*
