@@ -32,10 +32,17 @@ const int TILE_TOPLEFT = 11;
 
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
-LTexture gBGTexture;
 
+LTexture gBGTexture;
 LTexture gTileTexture;
+Player* testObj;
 SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
+
+
+void TestReactFun(Entity* Obj)
+{
+	Obj->ChangeShowState();
+}
 
 bool checkCollision(SDL_Rect a, SDL_Rect b)
 {
@@ -74,6 +81,53 @@ bool checkCollision(SDL_Rect a, SDL_Rect b)
 	}
 
 	if (leftA >= rightB)
+	{
+		return false;
+	}
+
+	//If none of the sides from A are outside B
+	return true;
+}
+
+
+bool checkNearBy(SDL_Rect a, SDL_Rect b)
+{
+	int nearByDistance = 10;
+	//The sides of the rectangles
+	int leftA, leftB;
+	int rightA, rightB;
+	int topA, topB;
+	int bottomA, bottomB;
+
+	//Calculate the sides of rect A
+	leftA = a.x;
+	rightA = a.x + a.w;
+	topA = a.y;
+	bottomA = a.y + a.h;
+
+	//Calculate the sides of rect B
+	leftB = b.x;
+	rightB = b.x + b.w;
+	topB = b.y;
+	bottomB = b.y + b.h;
+
+	//If any of the sides from A are outside of B
+	if (bottomA <= topB - nearByDistance)
+	{
+		return false;
+	}
+
+	if (topA >= bottomB + nearByDistance)
+	{
+		return false;
+	}
+
+	if (rightA <= leftB - nearByDistance)
+	{
+		return false;
+	}
+
+	if (leftA >= rightB + nearByDistance)
 	{
 		return false;
 	}
@@ -219,7 +273,7 @@ bool setTiles(Tile* tiles[])
 	return tilesLoaded;
 }
 
-bool touchesWall(SDL_Rect box, Tile* tiles[])
+bool touchesWall(SDL_Rect box, Tile* tiles[], vector<Entity*> Objs)
 {
 	//Go through the tiles
 	for (int i = 0; i < TOTAL_TILES; ++i)
@@ -235,6 +289,14 @@ bool touchesWall(SDL_Rect box, Tile* tiles[])
 		}
 	}
 
+	for (int i = 0; i < Objs.size(); i++)
+	{
+		if (checkCollision(box, Objs[i]->getBox()))
+		{
+			return true;
+		}
+	}
+
 	//If no wall tiles were touched
 	return false;
 }
@@ -244,7 +306,49 @@ SDL_Rect Entity::getBox()
 	return mBox;
 }
 
+void Entity::ChangeShowState()
+{
+	isShow = isShow ? false : true;
+}
 
+void Entity::ChangeReactState()
+{
+	isReact = isReact ? false : true;
+}
+
+void Entity::setReactFun(void (*func_react)(Entity* Obj))
+{
+	React_fun = func_react;
+	isReact = true;
+}
+
+void Entity::handleEvent(SDL_Event& e)
+{
+	if (!isReact)
+		return;
+	if (!checkNearBy(this->getBox(), testObj->getBox()))
+		return;
+	//If a key was pressed
+	if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+	{
+		//Adjust the velocity
+		switch (e.key.keysym.sym)
+		{
+		case SDLK_j:
+			React_fun(this);
+			break;
+
+		}
+	}
+	//If a key was released
+	else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+	{
+		//Adjust the velocity
+		switch (e.key.keysym.sym)
+		{
+		}
+	}
+}
 
 Tile::Tile(int x, int y, int tileType)
 {
@@ -258,6 +362,8 @@ Tile::Tile(int x, int y, int tileType)
 
 	//Get the tile type
 	mType = tileType;
+	isShow = true;
+	isReact = false;
 }
 
 void Tile::Render(SDL_Rect& camera)
@@ -288,7 +394,8 @@ StaticObj::StaticObj(const char* file)
 	mBox.y = 0;
 	mBox.w = StaticObjTex.getHeight();
 	mBox.h = StaticObjTex.getWidth();
-	return;
+	isShow = true;
+	isReact = false;
 }
 
 StaticObj::StaticObj(int x, int y, int tileType)
@@ -311,7 +418,7 @@ void StaticObj::SetPos(int x, int y)
 
 void StaticObj::Render(SDL_Rect& camera)
 {
-	if (checkCollision(camera, mBox))
+	if (checkCollision(camera, mBox) && isShow)
 	{
 		//Show the tile
 		StaticObjTex.render(mBox.x - camera.x, mBox.y - camera.y);
@@ -358,6 +465,8 @@ MoveObj::MoveObj(const char* file, int w, int h)
 
 	}
 	isMoving = false;
+	isShow = true;
+	isReact = false;
 	curDirection = KEY_PRESS_SURFACE_DOWN;
 }
 
@@ -375,57 +484,21 @@ int MoveObj::GetVelY()
 	return mVelY;
 }
 
-
-void MoveObj::handleEvent(SDL_Event& e)
+void MoveObj::SetPos(int x, int y)
 {
-
-	//If a key was pressed
-	if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
-	{
-		isMoving = true;
-		//Adjust the velocity
-		switch (e.key.keysym.sym)
-		{
-		case SDLK_UP:
-			mVelY -= DOT_VEL;
-			curDirection = KEY_PRESS_SURFACE_UP;
-			break;
-		case SDLK_DOWN:
-			mVelY += DOT_VEL;
-			curDirection = KEY_PRESS_SURFACE_DOWN;
-			break;
-		case SDLK_LEFT:
-			mVelX -= DOT_VEL;
-			curDirection = KEY_PRESS_SURFACE_LEFT;
-			break;
-		case SDLK_RIGHT:
-			mVelX += DOT_VEL;
-			curDirection = KEY_PRESS_SURFACE_RIGHT;
-			break;
-		}
-	}
-	//If a key was released
-	else if (e.type == SDL_KEYUP && e.key.repeat == 0)
-	{
-		isMoving = false;
-		//Adjust the velocity
-		switch (e.key.keysym.sym)
-		{
-		case SDLK_UP: mVelY += DOT_VEL; break;
-		case SDLK_DOWN: mVelY -= DOT_VEL; break;
-		case SDLK_LEFT: mVelX += DOT_VEL; break;
-		case SDLK_RIGHT: mVelX -= DOT_VEL; break;
-		}
-	}
+	mBox.x = x;
+	mBox.y = y;
 }
 
-void MoveObj::Move(Tile* tiles[])
+
+
+void MoveObj::Move(Tile* tiles[], vector<Entity*> Objs)
 {
 	//Move the dot left or right
 	mBox.x += mVelX;
 
 	//If the dot went too far to the left or right or touched a wall
-	if ((mBox.x < 0) || (mBox.x + mBox.w > LEVEL_WIDTH) || touchesWall(mBox, tiles))
+	if ((mBox.x < 0) || (mBox.x + mBox.w > LEVEL_WIDTH) || touchesWall(mBox, tiles, Objs))
 	{
 		//move back
 		mBox.x -= mVelX;
@@ -435,7 +508,7 @@ void MoveObj::Move(Tile* tiles[])
 	mBox.y += mVelY;
 
 	//If the dot went too far up or down or touched a wall
-	if ((mBox.y < 0) || (mBox.y + mBox.h > LEVEL_HEIGHT) || touchesWall(mBox, tiles))
+	if ((mBox.y < 0) || (mBox.y + mBox.h > LEVEL_HEIGHT) || touchesWall(mBox, tiles, Objs))
 	{
 		//move back
 		mBox.y -= mVelY;
@@ -457,7 +530,11 @@ void MoveObj::Render(SDL_Rect& camera)
 		frame = 0;
 	}
 
-	gSpriteSheetTexture.render(mBox.x - camera.x, mBox.y - camera.y, &gSpriteClips[curDirection][frame / MoveSpeedFrame]);
+	if (checkCollision(camera, mBox) && isShow)
+	{
+		//Show the tile
+		gSpriteSheetTexture.render(mBox.x - camera.x, mBox.y - camera.y, &gSpriteClips[curDirection][frame / MoveSpeedFrame]);
+	}
 	//SDL_RenderPresent(gRenderer);
 
 }
@@ -490,8 +567,74 @@ void MoveObj::setCamera(SDL_Rect& camera)
 	}
 }
 
+Player::Player(const char* file, int w, int h) :MoveObj(file, w, h)
+{
+	isReact = true;
+}
 
+Player::~Player()
+{
+	gSpriteSheetTexture.free();
+}
 
+void Player::handleEvent(SDL_Event& e)
+{
+	if (!isReact)
+		return;
+
+	//If a key was pressed
+	if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+	{
+		//Adjust the velocity
+		switch (e.key.keysym.sym)
+		{
+		case SDLK_UP:
+			mVelY -= DOT_VEL;
+			curDirection = KEY_PRESS_SURFACE_UP;
+			isMoving = true;
+			break;
+		case SDLK_DOWN:
+			mVelY += DOT_VEL;
+			curDirection = KEY_PRESS_SURFACE_DOWN;
+			isMoving = true;
+			break;
+		case SDLK_LEFT:
+			mVelX -= DOT_VEL;
+			curDirection = KEY_PRESS_SURFACE_LEFT;
+			isMoving = true;
+			break;
+		case SDLK_RIGHT:
+			mVelX += DOT_VEL;
+			curDirection = KEY_PRESS_SURFACE_RIGHT;
+			isMoving = true;
+			break;
+		}
+	}
+	//If a key was released
+	else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+	{
+		//Adjust the velocity
+		switch (e.key.keysym.sym)
+		{
+		case SDLK_UP:
+			mVelY += DOT_VEL;
+			isMoving = false;
+			break;
+		case SDLK_DOWN:
+			mVelY -= DOT_VEL;
+			isMoving = false;
+			break;
+		case SDLK_LEFT:
+			mVelX += DOT_VEL;
+			isMoving = false;
+			break;
+		case SDLK_RIGHT:
+			mVelX -= DOT_VEL;
+			isMoving = false;
+			break;
+		}
+	}
+}
 
 
 int main(int argc, char* args[])
@@ -503,10 +646,32 @@ int main(int argc, char* args[])
 	}
 	else
 	{
-		MoveObj testObj("img/man_1.png", 32, 48);
+		testObj = new Player("img/man_1.png", 32, 48);
+		MoveObj NPC_1("img/test1.png", 32, 48);
+		MoveObj NPC_2("img/test1.png", 32, 48);
+		MoveObj NPC_3("img/test1.png", 32, 48);
 		StaticObj t1("img/hello_world.bmp");
+		//The level tiles
+		Tile* tileSet[TOTAL_TILES];
+
 		gBGTexture.loadFromFile("img/testBG.png");
 		gTileTexture.loadFromFile("img/tiles.png");
+		setTiles(tileSet);
+
+
+		NPC_1.SetPos(100, 0);
+		NPC_1.setReactFun(TestReactFun);
+		NPC_2.SetPos(0, 120);
+		NPC_3.SetPos(200, 0);
+
+		//NPC_1.ChangeShowState();
+		//NPC_1.ChangeReactState();
+
+		vector<Entity*> Objs;
+		Objs.push_back(&NPC_1);
+		Objs.push_back(&NPC_2);
+		Objs.push_back(&NPC_3);
+
 
 		bool quit = false;
 
@@ -525,14 +690,13 @@ int main(int argc, char* args[])
 		int countedFrames = 0;
 		fpsTimer.start();
 
-		//The level tiles
-		Tile* tileSet[TOTAL_TILES];
 
-		setTiles(tileSet);
+		Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
+		Mix_Music* sound = Mix_LoadMUS("music/music.wav");
+		Mix_PlayMusic(sound, -1);
 
 		while (!quit)
 		{
-			//Handle events on queue
 			while (SDL_PollEvent(&e) != 0)
 			{
 				//User requests quit
@@ -540,10 +704,15 @@ int main(int argc, char* args[])
 				{
 					quit = true;
 				}
-				testObj.handleEvent(e);
+				testObj->handleEvent(e);
+				for (int i = 0; i < Objs.size(); i++)
+				{
+					//react for NPC
+					Objs[i]->handleEvent(e);
+				}
 			}
-			testObj.Move(tileSet);
-			testObj.setCamera(camera);
+			testObj->Move(tileSet, Objs);
+			testObj->setCamera(camera);
 
 			//Calculate and correct fps
 			float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
@@ -562,8 +731,12 @@ int main(int argc, char* args[])
 			}
 
 			//gBGTexture.render(0, 0, &camera);
-			t1.Render(camera);
-			testObj.Render(camera);
+			//t1.Render(camera);
+			testObj->Render(camera);
+
+			NPC_1.Render(camera);
+			NPC_2.Render(camera);
+			NPC_3.Render(camera);
 			SDL_RenderPresent(gRenderer);
 
 			++countedFrames;
@@ -582,4 +755,3 @@ int main(int argc, char* args[])
 	close();
 	return 0;
 }
-

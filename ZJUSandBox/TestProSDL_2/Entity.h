@@ -3,6 +3,8 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include<SDL_mixer.h>
+#include <vector> 
 #include <stdio.h>
 #include <string>
 #include<iostream>
@@ -39,11 +41,18 @@ class Entity
 {
 public:
 	SDL_Rect getBox();
+	void ChangeShowState();
+	void ChangeReactState();
+	virtual void handleEvent(SDL_Event& e);
 	virtual void Render(SDL_Rect& camera) = 0;
+	void setReactFun(void (*func_react)(Entity* Obj));
 
 protected:
 	//Collision box of the Entity
 	SDL_Rect mBox;
+	bool isShow;
+	bool isReact;
+	void (*React_fun)(Entity* Obj);
 
 };
 
@@ -88,10 +97,11 @@ public:
 	MoveObj(const char* file, int w, int h);
 	~MoveObj();
 
-	virtual void Move(Tile* tiles[]);
+	virtual void Move(Tile* tiles[], vector<Entity*> Objs);
 	virtual void Render(SDL_Rect& camera);
-	void handleEvent(SDL_Event& e);
+	//virtual void handleEvent(SDL_Event& e);
 	void setCamera(SDL_Rect& camera);
+	void SetPos(int x, int y);
 
 	int frame;
 
@@ -116,34 +126,27 @@ protected:
 	SDL_Rect  gSpriteClips[KEY_PRESS_SURFACE_TOTAL][WALKING_ANIMATION_FRAMES];
 	LTexture gSpriteSheetTexture;
 
+
 	//Indicates the current direction
 	KeyPressSurfaces curDirection;
 	bool isMoving;
 };
 
-/*
-class Role :MoveObj
+
+class Player :public MoveObj
 {
+
 public:
-	Role();
-	~Role();
-
-private:
-
-};
-
-
-class Player :Role
-{
-public:
-	Player();
+	Player(const char* file, int w, int h);
 	~Player();
-	void ControlMove();
 
+	virtual void handleEvent(SDL_Event& e);
 
 private:
 
 };
-*/
+
+
+
 
 #endif // !1
