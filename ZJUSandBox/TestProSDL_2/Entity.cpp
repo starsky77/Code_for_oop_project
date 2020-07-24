@@ -1,5 +1,6 @@
 #include"Entity.h";
 #include"Utils.h"
+#include"Text.h"
 
 const int LEVEL_WIDTH = 1280;
 const int LEVEL_HEIGHT = 960;
@@ -10,12 +11,15 @@ const int SCREEN_TICK_PER_FRAME = 1000 / SCREEN_FPS;
 
 
 //Tile constants
-const int TILE_WIDTH = 80;
-const int TILE_HEIGHT = 80;
-const int TOTAL_TILES = 192;
-const int TOTAL_TILE_SPRITES = 12;
+//40 * 30 Tiles 
+const int TILE_WIDTH = 32;
+const int TILE_HEIGHT = 32;
+const int TOTAL_TILES = 1200;
+const int TOTAL_TILE_SPRITES_W = 16;
+const int TOTAL_TILE_SPRITES_H = 12;
 
 //The different tile sprites
+/*
 const int TILE_RED = 0;
 const int TILE_GREEN = 1;
 const int TILE_BLUE = 2;
@@ -28,7 +32,7 @@ const int TILE_BOTTOM = 8;
 const int TILE_BOTTOMLEFT = 9;
 const int TILE_LEFT = 10;
 const int TILE_TOPLEFT = 11;
-
+*/
 
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
@@ -36,12 +40,17 @@ SDL_Renderer* gRenderer = NULL;
 LTexture gBGTexture;
 LTexture gTileTexture;
 Player* testObj;
-SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
+SDL_Rect gTileClips[TOTAL_TILE_SPRITES_W * TOTAL_TILE_SPRITES_H];
+
+
+Frame* biaoge = NULL;
+Text* text_1 = NULL;
 
 
 void TestReactFun(Entity* Obj)
 {
-	Obj->ChangeShowState();
+	biaoge->ChangeShowState();
+	text_1->ChangeShowState();
 }
 
 bool checkCollision(SDL_Rect a, SDL_Rect b)
@@ -136,6 +145,12 @@ bool checkNearBy(SDL_Rect a, SDL_Rect b)
 	return true;
 }
 
+bool checkCollisionTiles(int ID)
+{
+	return false;
+}
+
+
 bool setTiles(Tile* tiles[])
 {
 	//Success flag
@@ -145,7 +160,7 @@ bool setTiles(Tile* tiles[])
 	int x = 0, y = 0;
 
 	//Open the map
-	std::ifstream map("img/lazy.map");
+	std::ifstream map("img/testmap.map");
 
 	//If the map couldn't be loaded
 	if (map.fail())
@@ -174,7 +189,7 @@ bool setTiles(Tile* tiles[])
 			}
 
 			//If the number is a valid tile number
-			if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES))
+			if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES_W * TOTAL_TILE_SPRITES_H))
 			{
 				tiles[i] = new Tile(x, y, tileType);
 			}
@@ -204,65 +219,17 @@ bool setTiles(Tile* tiles[])
 		//Clip the sprite sheet
 		if (tilesLoaded)
 		{
-			gTileClips[TILE_RED].x = 0;
-			gTileClips[TILE_RED].y = 0;
-			gTileClips[TILE_RED].w = TILE_WIDTH;
-			gTileClips[TILE_RED].h = TILE_HEIGHT;
+			for (int i = 0; i < TOTAL_TILE_SPRITES_H; i++)
+			{
 
-			gTileClips[TILE_GREEN].x = 0;
-			gTileClips[TILE_GREEN].y = 80;
-			gTileClips[TILE_GREEN].w = TILE_WIDTH;
-			gTileClips[TILE_GREEN].h = TILE_HEIGHT;
-
-			gTileClips[TILE_BLUE].x = 0;
-			gTileClips[TILE_BLUE].y = 160;
-			gTileClips[TILE_BLUE].w = TILE_WIDTH;
-			gTileClips[TILE_BLUE].h = TILE_HEIGHT;
-
-			gTileClips[TILE_TOPLEFT].x = 80;
-			gTileClips[TILE_TOPLEFT].y = 0;
-			gTileClips[TILE_TOPLEFT].w = TILE_WIDTH;
-			gTileClips[TILE_TOPLEFT].h = TILE_HEIGHT;
-
-			gTileClips[TILE_LEFT].x = 80;
-			gTileClips[TILE_LEFT].y = 80;
-			gTileClips[TILE_LEFT].w = TILE_WIDTH;
-			gTileClips[TILE_LEFT].h = TILE_HEIGHT;
-
-			gTileClips[TILE_BOTTOMLEFT].x = 80;
-			gTileClips[TILE_BOTTOMLEFT].y = 160;
-			gTileClips[TILE_BOTTOMLEFT].w = TILE_WIDTH;
-			gTileClips[TILE_BOTTOMLEFT].h = TILE_HEIGHT;
-
-			gTileClips[TILE_TOP].x = 160;
-			gTileClips[TILE_TOP].y = 0;
-			gTileClips[TILE_TOP].w = TILE_WIDTH;
-			gTileClips[TILE_TOP].h = TILE_HEIGHT;
-
-			gTileClips[TILE_CENTER].x = 160;
-			gTileClips[TILE_CENTER].y = 80;
-			gTileClips[TILE_CENTER].w = TILE_WIDTH;
-			gTileClips[TILE_CENTER].h = TILE_HEIGHT;
-
-			gTileClips[TILE_BOTTOM].x = 160;
-			gTileClips[TILE_BOTTOM].y = 160;
-			gTileClips[TILE_BOTTOM].w = TILE_WIDTH;
-			gTileClips[TILE_BOTTOM].h = TILE_HEIGHT;
-
-			gTileClips[TILE_TOPRIGHT].x = 240;
-			gTileClips[TILE_TOPRIGHT].y = 0;
-			gTileClips[TILE_TOPRIGHT].w = TILE_WIDTH;
-			gTileClips[TILE_TOPRIGHT].h = TILE_HEIGHT;
-
-			gTileClips[TILE_RIGHT].x = 240;
-			gTileClips[TILE_RIGHT].y = 80;
-			gTileClips[TILE_RIGHT].w = TILE_WIDTH;
-			gTileClips[TILE_RIGHT].h = TILE_HEIGHT;
-
-			gTileClips[TILE_BOTTOMRIGHT].x = 240;
-			gTileClips[TILE_BOTTOMRIGHT].y = 160;
-			gTileClips[TILE_BOTTOMRIGHT].w = TILE_WIDTH;
-			gTileClips[TILE_BOTTOMRIGHT].h = TILE_HEIGHT;
+				for (int j = 0; j < TOTAL_TILE_SPRITES_W; j++)
+				{
+					gTileClips[i * TOTAL_TILE_SPRITES_H + j].x = i * TILE_WIDTH;
+					gTileClips[i * TOTAL_TILE_SPRITES_H + j].y = j * TILE_HEIGHT;
+					gTileClips[i * TOTAL_TILE_SPRITES_H + j].w = TILE_WIDTH;
+					gTileClips[i * TOTAL_TILE_SPRITES_H + j].h = TILE_HEIGHT;
+				}
+			}
 		}
 	}
 
@@ -279,7 +246,7 @@ bool touchesWall(SDL_Rect box, Tile* tiles[], vector<Entity*> Objs)
 	for (int i = 0; i < TOTAL_TILES; ++i)
 	{
 		//If the tile is a wall type tile
-		if ((tiles[i]->getType() >= TILE_CENTER) && (tiles[i]->getType() <= TILE_TOPLEFT))
+		if (checkCollisionTiles(tiles[i]->getType()))
 		{
 			//If the collision box touches the wall tile
 			if (checkCollision(box, tiles[i]->getBox()))
@@ -653,9 +620,16 @@ int main(int argc, char* args[])
 		StaticObj t1("img/hello_world.bmp");
 		//The level tiles
 		Tile* tileSet[TOTAL_TILES];
+		timer time1;
+
+		biaoge = new Frame("img/frame1.bmp");
+		text_1 = new Text("The DDL of the project is in this weekend!!!!");
+		biaoge->ChangeShowState();
+		text_1->ChangeShowState();
+		time1.Setisshow();
 
 		gBGTexture.loadFromFile("img/testBG.png");
-		gTileTexture.loadFromFile("img/tiles.png");
+		gTileTexture.loadFromFile("img/map/map.png");
 		setTiles(tileSet);
 
 
@@ -663,6 +637,8 @@ int main(int argc, char* args[])
 		NPC_1.setReactFun(TestReactFun);
 		NPC_2.SetPos(0, 120);
 		NPC_3.SetPos(200, 0);
+
+
 
 		//NPC_1.ChangeShowState();
 		//NPC_1.ChangeReactState();
@@ -737,6 +713,12 @@ int main(int argc, char* args[])
 			NPC_1.Render(camera);
 			NPC_2.Render(camera);
 			NPC_3.Render(camera);
+			time1.Render(550, 0, 1);
+
+
+			biaoge->Render(200, 350, 2);
+			text_1->Render(200, 350, 2);
+
 			SDL_RenderPresent(gRenderer);
 
 			++countedFrames;
