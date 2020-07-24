@@ -53,6 +53,12 @@ void TestReactFun(Entity* Obj)
 	text_1->ChangeShowState();
 }
 
+void testReacFun_2(LButton* Obj)
+{
+	biaoge->ChangeShowState();
+	text_1->ChangeShowState();
+}
+
 bool checkCollision(SDL_Rect a, SDL_Rect b)
 {
 	//The sides of the rectangles
@@ -160,7 +166,7 @@ bool setTiles(Tile* tiles[])
 	int x = 0, y = 0;
 
 	//Open the map
-	std::ifstream map("img/testmap.map");
+	std::ifstream map("img/map/testmap.map");
 
 	//If the map couldn't be loaded
 	if (map.fail())
@@ -613,22 +619,23 @@ int main(int argc, char* args[])
 	}
 	else
 	{
-		testObj = new Player("img/man_1.png", 32, 48);
-		MoveObj NPC_1("img/test1.png", 32, 48);
-		MoveObj NPC_2("img/test1.png", 32, 48);
-		MoveObj NPC_3("img/test1.png", 32, 48);
-		StaticObj t1("img/hello_world.bmp");
+		testObj = new Player("img/role/man_1.png", 32, 48);
+		MoveObj NPC_1("img/role/man_2.png", 32, 48);
+		MoveObj NPC_2("img/role/man_3.png", 32, 48);
+		MoveObj NPC_3("img/role/woman_1.png", 32, 48);
+		StaticObj t1("img/test/hello_world.bmp");
 		//The level tiles
 		Tile* tileSet[TOTAL_TILES];
 		timer time1;
+		LButton testBtn(68, 27, "img/text/button_1.png");
 
-		biaoge = new Frame("img/frame1.bmp");
+		biaoge = new Frame("img/text/frame1.bmp");
 		text_1 = new Text("The DDL of the project is in this weekend!!!!");
 		biaoge->ChangeShowState();
 		text_1->ChangeShowState();
 		time1.Setisshow();
 
-		gBGTexture.loadFromFile("img/testBG.png");
+		gBGTexture.loadFromFile("img/test/testBG.png");
 		gTileTexture.loadFromFile("img/map/map.png");
 		setTiles(tileSet);
 
@@ -637,11 +644,11 @@ int main(int argc, char* args[])
 		NPC_1.setReactFun(TestReactFun);
 		NPC_2.SetPos(0, 120);
 		NPC_3.SetPos(200, 0);
+		testBtn.setPosition(200, 200);
+		testBtn.setReactFun(testReacFun_2);
+		testBtn.ChangeShowState();
 
 
-
-		//NPC_1.ChangeShowState();
-		//NPC_1.ChangeReactState();
 
 		vector<Entity*> Objs;
 		Objs.push_back(&NPC_1);
@@ -686,6 +693,7 @@ int main(int argc, char* args[])
 					//react for NPC
 					Objs[i]->handleEvent(e);
 				}
+				testBtn.handleEvent(&e);
 			}
 			testObj->Move(tileSet, Objs);
 			testObj->setCamera(camera);
@@ -714,6 +722,8 @@ int main(int argc, char* args[])
 			NPC_2.Render(camera);
 			NPC_3.Render(camera);
 			time1.Render(550, 0, 1);
+
+			testBtn.render();
 
 
 			biaoge->Render(200, 350, 2);

@@ -3,10 +3,128 @@
 #include"Text.h"
 
 
-
 SDL_Color color = { 0, 0, 0 };
 
-Frame::Frame(const char* file) 
+
+LButton::LButton(int x, int y, const char* file)
+{
+	mPosition.x = 0;
+	mPosition.y = 0;
+
+	mCurrentSprite = BUTTON_SPRITE_MOUSE_OUT;
+
+
+	gButtonSpriteSheetTexture.loadFromFile(file);
+
+
+	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i)
+	{
+		gSpriteClips[i].x = 0;
+		gSpriteClips[i].y = i * y;
+		gSpriteClips[i].w = x;
+		gSpriteClips[i].h = y;
+	}
+
+	isShow = false;
+	isPressed = false;
+}
+
+void LButton::setPosition(int x, int y)
+{
+	mPosition.x = x;
+	mPosition.y = y;
+}
+
+void LButton::ChangeShowState()
+{
+	isShow = isShow ? false : true;
+}
+
+
+void LButton::handleEvent(SDL_Event* e)
+{
+	if (!isShow)
+		return;
+	//If mouse event happened
+	if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP)
+	{
+		//Get mouse position
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+
+		//Check if mouse is in button
+		bool inside = true;
+
+		//Mouse is left of the button
+		if (x < mPosition.x)
+		{
+			inside = false;
+		}
+		//Mouse is right of the button
+		else if (x > mPosition.x + gSpriteClips[0].w)
+		{
+			inside = false;
+		}
+		//Mouse above the button
+		else if (y < mPosition.y)
+		{
+			inside = false;
+		}
+		//Mouse below the button
+		else if (y > mPosition.y + gSpriteClips[0].h)
+		{
+			inside = false;
+		}
+
+		//Mouse is outside button
+		if (!inside)
+		{
+			mCurrentSprite = BUTTON_SPRITE_MOUSE_OUT;
+		}
+		//Mouse is inside button
+		else
+		{
+			//Set mouse over sprite
+			switch (e->type)
+			{
+			case SDL_MOUSEMOTION:
+				mCurrentSprite = BUTTON_SPRITE_MOUSE_OVER_MOTION;
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				mCurrentSprite = BUTTON_SPRITE_MOUSE_DOWN;
+				isPressed = true;
+				break;
+
+			case SDL_MOUSEBUTTONUP:
+				mCurrentSprite = BUTTON_SPRITE_MOUSE_UP;
+				if (isPressed)
+				{
+					isPressed = 0;
+					React_fun(this);
+				}
+				break;
+			}
+		}
+	}
+}
+
+void LButton::render()
+{
+	if (!isShow)
+		return;
+	//Show current button sprite
+	gButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gSpriteClips[mCurrentSprite]);
+}
+
+
+void LButton::setReactFun(void (*func_react)(LButton* Obj))
+{
+	React_fun = func_react;
+
+}
+
+Frame::Frame(const char* file)
 {
 	imag = SDL_LoadBMP(file);
 	if (imag == NULL)
@@ -24,7 +142,7 @@ Frame::Frame(const char* file)
 	return;
 }
 
-void Frame::Render(int camX, int camY, int size) 
+void Frame::Render(int camX, int camY, int size)
 {
 	if (!isShow)
 		return;
@@ -42,7 +160,7 @@ void Frame::ChangeShowState()
 	isShow = isShow ? false : true;
 }
 
-Frame::~Frame() 
+Frame::~Frame()
 {
 	SDL_FreeSurface(imag);
 	SDL_DestroyTexture(tex);
@@ -51,7 +169,7 @@ Frame::~Frame()
 
 Text::Text(const char* s)
 {
-	TTF_Font* font = TTF_OpenFont("img/lazy.ttf", 18);
+	TTF_Font* font = TTF_OpenFont("ttf/English_1.ttf", 18);
 	SDL_Surface* textSurface = TTF_RenderText_Solid(font, s, color);
 	isShow = true;
 	if (textSurface == NULL)
@@ -80,7 +198,7 @@ void Text::ChangeShowState()
 	isShow = isShow ? false : true;
 }
 
-void Text::Render(int x, int y, int size) 
+void Text::Render(int x, int y, int size)
 {
 	if (!isShow)
 		return;
@@ -91,18 +209,18 @@ void Text::Render(int x, int y, int size)
 	SDL_RenderCopy(gRenderer, mTexture, NULL, &rect);
 }
 
-Text::~Text() 
+Text::~Text()
 {
 
 }
 
-timer::timer() 
+timer::timer()
 {
 	second = minute = hour = 0;
 	isshow = 0;
 }
 
-void timer::Setisshow() 
+void timer::Setisshow()
 {
 	isshow = 1 - isshow;
 }
