@@ -23,7 +23,7 @@ public:
 	~LTexture();
 
 	//Loads image at specified path
-	bool loadFromFile(std::string path);
+	bool loadFromFile(std::string path, double size = 1);
 
 	//Deallocates texture
 	void free();

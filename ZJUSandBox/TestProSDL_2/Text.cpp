@@ -40,6 +40,11 @@ void LButton::ChangeShowState()
 	isShow = isShow ? false : true;
 }
 
+void LButton::setAlpha(Uint8 a)
+{
+	gButtonSpriteSheetTexture.setAlpha(a);
+}
+
 
 void LButton::handleEvent(SDL_Event* e)
 {
@@ -126,33 +131,50 @@ void LButton::setReactFun(void (*func_react)(LButton* Obj))
 
 Frame::Frame(const char* file)
 {
-	imag = SDL_LoadBMP(file);
-	if (imag == NULL)
-	{
-		cout << "Frame:load imag error\n";
-		return;
-	}
+	frameTex.loadFromFile(file);
+	
 	rect.x = 0;
 	rect.y = 0;
-	rect.h = imag->h;
-	rect.w = imag->w;
-	isShow = true;
-	tex = SDL_CreateTextureFromSurface(gRenderer, imag);
+	rect.h = frameTex.getHeight();
+	rect.w = frameTex.getWidth();
+	isShow = false;
 	//SDL_FreeSurface(imag);
 	return;
 }
 
-void Frame::Render(int camX, int camY, int size)
+void Frame::Render()
 {
 	if (!isShow)
 		return;
 
-	rect.x = camX;
-	rect.y = camY;
-	rect.h = imag->h / size;
-	rect.w = imag->w / size;
-	SDL_RenderCopy(gRenderer, tex, NULL, &rect);
 
+	frameTex.render(rect.x, rect.y);
+}
+
+void Frame::setPos(int x, int y)
+{
+	rect.x = x;
+	rect.y = y;
+}
+
+SDL_Rect Frame::getBox()
+{
+	return rect;
+}
+
+void Frame::Render(int camX, int camY)
+{
+	if (!isShow)
+		return;
+
+	frameTex.render(rect.x, rect.y);
+
+}
+
+
+void Frame::setAlpha(Uint8 a)
+{
+	frameTex.setAlpha(a);
 }
 
 void Frame::ChangeShowState()
@@ -167,11 +189,13 @@ Frame::~Frame()
 }
 
 
-Text::Text(const char* s)
+Text::Text(const string s,int size,Uint32 width)
 {
-	TTF_Font* font = TTF_OpenFont("ttf/English_1.ttf", 18);
-	SDL_Surface* textSurface = TTF_RenderText_Solid(font, s, color);
-	isShow = true;
+	char* st1 = const_cast<char*>(s.c_str());
+	TTF_Font* font = TTF_OpenFont("ttf/English_1.ttf", size);
+	SDL_Surface* textSurface = TTF_RenderText_Blended_Wrapped(font, st1,color, width);
+	//SDL_Surface* textSurface = TTF_RenderText_Solid(font, s, color);
+	isShow = false;
 	if (textSurface == NULL)
 	{
 		printf("Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
@@ -189,6 +213,44 @@ Text::Text(const char* s)
 			//Get image dimensions
 			mWidth = textSurface->w;
 			mHeight = textSurface->h;
+			rect.w = mWidth;
+			rect.h = mHeight;
+		}
+	}
+}
+
+SDL_Rect Text::getBox()
+{
+	return rect;
+}
+
+
+
+Text::Text(const string s,int size)
+{
+	char* st1 = const_cast<char*>(s.c_str());
+	TTF_Font* font = TTF_OpenFont("ttf/English_1.ttf", size);
+	SDL_Surface* textSurface = TTF_RenderText_Solid(font, st1, color);
+	isShow = false;
+	if (textSurface == NULL)
+	{
+		printf("Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
+	}
+	else
+	{
+		//Create texture from surface pixels
+		mTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
+		if (mTexture == NULL)
+		{
+			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
+		}
+		else
+		{
+			//Get image dimensions
+			mWidth = textSurface->w;
+			mHeight = textSurface->h;
+			rect.w = mWidth;
+			rect.h = mHeight;
 		}
 	}
 }
@@ -198,15 +260,36 @@ void Text::ChangeShowState()
 	isShow = isShow ? false : true;
 }
 
-void Text::Render(int x, int y, int size)
+bool Text::getIsShow()
+{
+	return isShow;
+}
+
+
+void Text::Render(int x, int y)
 {
 	if (!isShow)
 		return;
+	SDL_Rect tmp;
+	tmp.x = x;
+	tmp.y = y;
+	tmp.h = mHeight;
+	tmp.w = mWidth;
+	SDL_RenderCopy(gRenderer, mTexture, NULL, &tmp);
+}
+
+void Text::Render()
+{
+	if (!isShow)
+		return;
+
+	SDL_RenderCopy(gRenderer, mTexture, NULL, &rect);
+}
+
+void Text::setPos(int x, int y)
+{
 	rect.x = x;
 	rect.y = y;
-	rect.h = mHeight;
-	rect.w = mWidth;
-	SDL_RenderCopy(gRenderer, mTexture, NULL, &rect);
 }
 
 Text::~Text()
@@ -248,10 +331,10 @@ void timer::Render(int x, int y, int size)
 	sprintf_s(s, "%02d", ss);
 	sprintf_s(m, "%02d", mm);
 	sprintf_s(h, "%02d", hh);
-	Text s1(s);
-	Text m1(m);
-	Text h1(h);
-	s1.Render(x + 50, y, size);
-	m1.Render(x + 25, y, size);
-	h1.Render(x, y, size);
+	Text s1(s,18);
+	Text m1(m,18);
+	Text h1(h,18);
+	s1.Render(x + 50, y);
+	m1.Render(x + 25, y);
+	h1.Render(x, y);
 }

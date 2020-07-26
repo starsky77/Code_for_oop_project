@@ -92,7 +92,7 @@ LTexture::~LTexture()
 	free();
 }
 
-bool LTexture::loadFromFile(std::string path)
+bool LTexture::loadFromFile(std::string path, double size )
 {
 	//Get rid of preexisting texture
 	free();
@@ -120,8 +120,8 @@ bool LTexture::loadFromFile(std::string path)
 		else
 		{
 			//Get image dimensions
-			mWidth = loadedSurface->w;
-			mHeight = loadedSurface->h;
+			mWidth = loadedSurface->w * size;
+			mHeight = loadedSurface->h * size;
 		}
 
 		//Get rid of old loaded surface
@@ -163,7 +163,7 @@ void LTexture::setAlpha(Uint8 alpha)
 	SDL_SetTextureAlphaMod(mTexture, alpha);
 }
 
-void LTexture::render(int x, int y, SDL_Rect* clip)
+void LTexture::render(int x, int y, SDL_Rect* clip )
 {
 	//Set rendering space and render to screen
 	SDL_Rect renderQuad = { x, y, mWidth, mHeight };

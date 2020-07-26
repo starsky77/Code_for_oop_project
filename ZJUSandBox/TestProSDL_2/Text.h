@@ -26,7 +26,6 @@ enum LButtonSprite
 };
 
 
-
 class LButton
 {
 public:
@@ -45,6 +44,8 @@ public:
 	void ChangeShowState();
 
 	void setReactFun(void (*func_react)(LButton* Obj));
+
+	void setAlpha(Uint8 a);
 
 
 private:
@@ -69,15 +70,21 @@ private:
 class Frame
 {
 public:
-	void Render(int camX, int camY, int size = 1);
+	void Render(int camX, int camY);
+	void Render();
 	void ChangeShowState();
+	void setAlpha(Uint8 a);
+	void setPos(int x, int y);
+	SDL_Rect getBox();
 	Frame(const char* file);
+	Frame(){ }
 	~Frame();
 
 private:
 	SDL_Rect rect;
 	SDL_Surface* imag = NULL;
 	SDL_Texture* tex = NULL;
+	LTexture frameTex;
 	bool isShow;
 
 };
@@ -85,9 +92,14 @@ private:
 class Text
 {
 public:
-	void Render(int x, int y, int size);
+	void Render(int x, int y);
+	void Render();
 	void ChangeShowState();
-	Text(const char* s);
+	Text(const string s, int size, Uint32 width);
+	Text(const string s, int size);
+	SDL_Rect getBox();
+	void setPos(int x, int y);
+	bool getIsShow();
 	~Text();
 private:
 	//The actual hardware texture

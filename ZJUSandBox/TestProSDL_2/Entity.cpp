@@ -2,6 +2,10 @@
 #include"Utils.h"
 #include"Text.h"
 
+
+const string SPLITCHAR = "\n";
+const int TEXTSIZE = 18;
+
 const int LEVEL_WIDTH = 1280;
 const int LEVEL_HEIGHT = 960;
 const int SCREEN_WIDTH = 640;
@@ -18,21 +22,7 @@ const int TOTAL_TILES = 1200;
 const int TOTAL_TILE_SPRITES_W = 16;
 const int TOTAL_TILE_SPRITES_H = 12;
 
-//The different tile sprites
-/*
-const int TILE_RED = 0;
-const int TILE_GREEN = 1;
-const int TILE_BLUE = 2;
-const int TILE_CENTER = 3;
-const int TILE_TOP = 4;
-const int TILE_TOPRIGHT = 5;
-const int TILE_RIGHT = 6;
-const int TILE_BOTTOMRIGHT = 7;
-const int TILE_BOTTOM = 8;
-const int TILE_BOTTOMLEFT = 9;
-const int TILE_LEFT = 10;
-const int TILE_TOPLEFT = 11;
-*/
+
 
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
@@ -49,8 +39,8 @@ Text* text_1 = NULL;
 
 void TestReactFun(Entity* Obj)
 {
-	biaoge->ChangeShowState();
-	text_1->ChangeShowState();
+	int newID = Obj->getcurTextID() + 1;
+	Obj->updataTextBox(newID);
 }
 
 void testReacFun_2(LButton* Obj)
@@ -274,9 +264,106 @@ bool touchesWall(SDL_Rect box, Tile* tiles[], vector<Entity*> Objs)
 	return false;
 }
 
+
+
 SDL_Rect Entity::getBox()
 {
 	return mBox;
+}
+
+Entity::Entity()
+{
+	textBox = NULL;
+	text = NULL;
+	curTextID = 0;
+}
+
+
+void Entity::setTextBox(const char* file_box, const char* file_text)
+{
+	//init textBox
+	textBox = new Frame(file_box);
+	textBox->setAlpha(200);
+
+	//textBox is in the center of screen
+	int text_X = SCREEN_WIDTH / 2 - textBox->getBox().w / 2;
+	int text_Y = SCREEN_HEIGHT / 2 - textBox->getBox().h / 2;
+	textBox->setPos(text_X, text_Y);
+
+	//read from file and convert into string
+	string str;
+	ifstream ifile(file_text);
+	ostringstream buf;
+	char ch;
+	while (buf && ifile.get(ch))
+	{
+		buf.put(ch);
+	}
+	str = buf.str();
+
+	//split into several strings
+	if ("" == str)
+	{
+		text = new Text("", TEXTSIZE, textBox->getBox().w - 10);
+		textContent.push_back("");
+		return;
+	}
+	char* strs = new char[str.length() + 1]; 
+	strcpy(strs, str.c_str());
+	char* d = new char[SPLITCHAR.length() + 1];
+	strcpy(d, SPLITCHAR.c_str());
+	char* p = strtok(strs, d);
+	while (p) {
+		string s = p; 
+		textContent.push_back(s);
+		p = strtok(NULL, d);
+	}
+	delete strs;
+	delete d;
+
+	text = new Text(textContent[0], TEXTSIZE, textBox->getBox().w - 10);
+	text->setPos(text_X + 5, text_Y + 10);
+}
+
+void Entity::ChangeTextShowState()
+{
+	textBox->ChangeShowState();
+	text->ChangeShowState();
+}
+
+void Entity::updataTextBox(int newID)
+{
+	if (newID >= textContent.size())
+	{
+		newID = textContent.size() - 1;
+	}
+	else if (newID < 0)
+	{
+		newID = 0;
+	}
+	curTextID = newID;
+
+	bool tmp = text->getIsShow();
+	int lastPos_X = text->getBox().x;
+	int lastPos_Y = text->getBox().y;
+	free(text);
+	text = new Text(textContent[curTextID], TEXTSIZE, textBox->getBox().w - 10);
+	text->setPos(lastPos_X, lastPos_Y);
+	if (tmp)
+	{
+		text->ChangeShowState();
+	}
+}
+
+int Entity::getcurTextID()
+{
+	return curTextID;
+}
+
+void Entity::textShow()
+{
+	textBox->Render();
+	text->Render();
 }
 
 void Entity::ChangeShowState()
@@ -308,7 +395,7 @@ void Entity::handleEvent(SDL_Event& e)
 		switch (e.key.keysym.sym)
 		{
 		case SDLK_j:
-			React_fun(this);
+			isPressed = true;
 			break;
 
 		}
@@ -319,6 +406,13 @@ void Entity::handleEvent(SDL_Event& e)
 		//Adjust the velocity
 		switch (e.key.keysym.sym)
 		{
+		case SDLK_j:
+			if (isPressed)
+			{
+				isPressed = false;
+				React_fun(this);
+			}
+			break;
 		}
 	}
 }
@@ -342,7 +436,7 @@ Tile::Tile(int x, int y, int tileType)
 void Tile::Render(SDL_Rect& camera)
 {
 	//If the tile is on screen
-	if (checkCollision(camera, mBox))
+	if (checkNearBy(camera, mBox))
 	{
 		//Show the tile
 		gTileTexture.render(mBox.x - camera.x, mBox.y - camera.y, &gTileClips[mType]);
@@ -356,10 +450,10 @@ int Tile::getType()
 
 
 
-StaticObj::StaticObj(const char* file)
+StaticObj::StaticObj(const char* file,double size)
 {
 
-	if (!StaticObjTex.loadFromFile(file))
+	if (!StaticObjTex.loadFromFile(file,size))
 	{
 		printf("Failed to load the texture!\n");
 	}
@@ -367,7 +461,7 @@ StaticObj::StaticObj(const char* file)
 	mBox.y = 0;
 	mBox.w = StaticObjTex.getHeight();
 	mBox.h = StaticObjTex.getWidth();
-	isShow = true;
+	isShow = false;
 	isReact = false;
 }
 
@@ -383,6 +477,11 @@ StaticObj::StaticObj(int x, int y, int tileType)
 
 }
 
+void StaticObj::setAlpha(Uint8 a)
+{
+	StaticObjTex.setAlpha(a);
+}
+
 void StaticObj::SetPos(int x, int y)
 {
 	mBox.x = x;
@@ -396,6 +495,13 @@ void StaticObj::Render(SDL_Rect& camera)
 		//Show the tile
 		StaticObjTex.render(mBox.x - camera.x, mBox.y - camera.y);
 	}
+}
+
+void StaticObj::Render()
+{
+	if (!isShow)
+		return;
+	StaticObjTex.render(mBox.x, mBox.y);
 }
 
 StaticObj::~StaticObj()
@@ -543,6 +649,38 @@ void MoveObj::setCamera(SDL_Rect& camera)
 Player::Player(const char* file, int w, int h) :MoveObj(file, w, h)
 {
 	isReact = true;
+	health = Attribures_9;
+	mood = Attribures_9;
+	GPA = 4.2;
+
+	StaticObj *icon = NULL;
+	string health_file = "img/UI/health_";
+	string mood_file = "img/UI/mood_";
+	string PNG = ".png";
+	for (int i = Attribures_0; i <= Attribures_9; i++)
+	{
+		string postfix = to_string(i * 2);
+		string fullName = health_file + postfix + PNG;
+		char* str = (char*)fullName.data();
+		icon = new StaticObj(str, 0.5);
+		icon->SetPos(0, 0);
+		icon->ChangeShowState();
+		icon->setAlpha(200);
+		health_icon.push_back(icon);
+
+		fullName= mood_file + postfix + PNG;
+		str = (char*)fullName.data();
+		icon = new StaticObj(str, 0.5);
+		icon->SetPos(0, 40);
+		icon->ChangeShowState();
+		icon->setAlpha(200);
+		mood_icon.push_back(icon);
+	}
+
+	string GPA_full = "GPA:" + to_string(GPA);
+	GPA_icon = new Text((char*)GPA_full.data(), TEXTSIZE);
+	GPA_icon->setPos(0, 80);
+	GPA_icon->ChangeShowState();
 }
 
 Player::~Player()
@@ -609,6 +747,19 @@ void Player::handleEvent(SDL_Event& e)
 	}
 }
 
+void Player::showAttribures()
+{
+	health_icon[health]->Render();
+	mood_icon[mood]->Render();
+
+	free(GPA_icon);
+	string GPA_full = "GPA:" + to_string(GPA);
+	GPA_icon = new Text((char*)GPA_full.data(), TEXTSIZE);
+	GPA_icon->setPos(0, health_icon[health]->getBox().h * 2 + 10);
+	GPA_icon->ChangeShowState();
+	GPA_icon->Render();
+}
+
 
 int main(int argc, char* args[])
 {
@@ -619,29 +770,45 @@ int main(int argc, char* args[])
 	}
 	else
 	{
+		//Initialization of basic variables
+		bool quit = false;
+		//Event handler
+		SDL_Event e;
+		SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+		//The frames per second timer
+		LTimer fpsTimer;
+		//The frames per second cap timer
+		LTimer capTimer;
+		//Start counting frames per second
+		int countedFrames = 0;
+
+		//Initialization of other variables
 		testObj = new Player("img/role/man_1.png", 32, 48);
 		MoveObj NPC_1("img/role/man_2.png", 32, 48);
 		MoveObj NPC_2("img/role/man_3.png", 32, 48);
 		MoveObj NPC_3("img/role/woman_1.png", 32, 48);
 		StaticObj t1("img/test/hello_world.bmp");
-		//The level tiles
 		Tile* tileSet[TOTAL_TILES];
 		timer time1;
 		LButton testBtn(68, 27, "img/text/button_1.png");
-
-		biaoge = new Frame("img/text/frame1.bmp");
-		text_1 = new Text("The DDL of the project is in this weekend!!!!");
-		biaoge->ChangeShowState();
-		text_1->ChangeShowState();
-		time1.Setisshow();
+		biaoge = new Frame("img/text/frame2.png");
+		text_1 = new Text("The DDL of the project is in this weekend!!!!",18,100);
 
 		gBGTexture.loadFromFile("img/test/testBG.png");
 		gTileTexture.loadFromFile("img/map/map.png");
 		setTiles(tileSet);
 
+		//Some adjustments after variable initialization
+		biaoge->ChangeShowState();
+		text_1->ChangeShowState();
+		time1.Setisshow();
+		biaoge->setAlpha(100);
+
 
 		NPC_1.SetPos(100, 0);
 		NPC_1.setReactFun(TestReactFun);
+		NPC_1.setTextBox("img/text/frame3.png", "img/textContent/test.txt");
+		NPC_1.ChangeTextShowState();
 		NPC_2.SetPos(0, 120);
 		NPC_3.SetPos(200, 0);
 		testBtn.setPosition(200, 200);
@@ -649,35 +816,22 @@ int main(int argc, char* args[])
 		testBtn.ChangeShowState();
 
 
-
+		//Objects with collision volume
 		vector<Entity*> Objs;
 		Objs.push_back(&NPC_1);
 		Objs.push_back(&NPC_2);
 		Objs.push_back(&NPC_3);
 
 
-		bool quit = false;
-
-		//Event handler
-		SDL_Event e;
-
-		SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-
-		//The frames per second timer
-		LTimer fpsTimer;
-
-		//The frames per second cap timer
-		LTimer capTimer;
-
-		//Start counting frames per second
-		int countedFrames = 0;
+		//start the timer
 		fpsTimer.start();
 
-
+		//open the muisc
 		Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
 		Mix_Music* sound = Mix_LoadMUS("music/music.wav");
 		Mix_PlayMusic(sound, -1);
 
+		//main loop
 		while (!quit)
 		{
 			while (SDL_PollEvent(&e) != 0)
@@ -687,6 +841,7 @@ int main(int argc, char* args[])
 				{
 					quit = true;
 				}
+				//All the "hadnleEvent" func should place below
 				testObj->handleEvent(e);
 				for (int i = 0; i < Objs.size(); i++)
 				{
@@ -695,6 +850,7 @@ int main(int argc, char* args[])
 				}
 				testBtn.handleEvent(&e);
 			}
+			//react of input
 			testObj->Move(tileSet, Objs);
 			testObj->setCamera(camera);
 
@@ -709,30 +865,23 @@ int main(int argc, char* args[])
 			SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 			SDL_RenderClear(gRenderer);
 
+			//render 
 			for (int i = 0; i < TOTAL_TILES; ++i)
 			{
 				tileSet[i]->Render(camera);
 			}
-
-			//gBGTexture.render(0, 0, &camera);
-			//t1.Render(camera);
 			testObj->Render(camera);
-
 			NPC_1.Render(camera);
 			NPC_2.Render(camera);
 			NPC_3.Render(camera);
 			time1.Render(550, 0, 1);
-
 			testBtn.render();
-
-
-			biaoge->Render(200, 350, 2);
-			text_1->Render(200, 350, 2);
+			NPC_1.textShow();
+			testObj->showAttribures();
 
 			SDL_RenderPresent(gRenderer);
 
 			++countedFrames;
-
 			//If frame finished early
 			int frameTicks = capTimer.getTicks();
 			if (frameTicks < SCREEN_TICK_PER_FRAME)
@@ -740,7 +889,6 @@ int main(int argc, char* args[])
 				//Wait remaining time
 				SDL_Delay(SCREEN_TICK_PER_FRAME - frameTicks);
 			}
-
 		}
 
 	}
