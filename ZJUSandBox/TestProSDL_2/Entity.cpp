@@ -20,7 +20,7 @@ const int TILE_WIDTH = 32;
 const int TILE_HEIGHT = 32;
 const int TOTAL_TILES = 1200;
 const int TOTAL_TILE_SPRITES_W = 16;
-const int TOTAL_TILE_SPRITES_H = 12;
+const int TOTAL_TILE_SPRITES_H = 64;
 
 
 
@@ -143,11 +143,13 @@ bool checkNearBy(SDL_Rect a, SDL_Rect b)
 
 bool checkCollisionTiles(int ID)
 {
+	if (ID == 16)
+		return true;
 	return false;
 }
 
 
-bool setTiles(Tile* tiles[])
+bool setTiles(Tile* tiles[],const char * str)
 {
 	//Success flag
 	bool tilesLoaded = true;
@@ -156,7 +158,7 @@ bool setTiles(Tile* tiles[])
 	int x = 0, y = 0;
 
 	//Open the map
-	std::ifstream map("img/map/testmap.map");
+	std::ifstream map(str);
 
 	//If the map couldn't be loaded
 	if (map.fail())
@@ -215,15 +217,15 @@ bool setTiles(Tile* tiles[])
 		//Clip the sprite sheet
 		if (tilesLoaded)
 		{
-			for (int i = 0; i < TOTAL_TILE_SPRITES_H; i++)
+			for (int j = 0; j < TOTAL_TILE_SPRITES_H; j++)
 			{
 
-				for (int j = 0; j < TOTAL_TILE_SPRITES_W; j++)
+				for (int i = 0; i < TOTAL_TILE_SPRITES_W; i++)
 				{
-					gTileClips[i * TOTAL_TILE_SPRITES_H + j].x = i * TILE_WIDTH;
-					gTileClips[i * TOTAL_TILE_SPRITES_H + j].y = j * TILE_HEIGHT;
-					gTileClips[i * TOTAL_TILE_SPRITES_H + j].w = TILE_WIDTH;
-					gTileClips[i * TOTAL_TILE_SPRITES_H + j].h = TILE_HEIGHT;
+					gTileClips[j * TOTAL_TILE_SPRITES_W + i].x = i * TILE_WIDTH;
+					gTileClips[j * TOTAL_TILE_SPRITES_W + i].y = j * TILE_HEIGHT;
+					gTileClips[j * TOTAL_TILE_SPRITES_W + i].w = TILE_WIDTH;
+					gTileClips[j * TOTAL_TILE_SPRITES_W + i].h = TILE_HEIGHT;
 				}
 			}
 		}
@@ -254,6 +256,8 @@ bool touchesWall(SDL_Rect box, Tile* tiles[], vector<Entity*> Objs)
 
 	for (int i = 0; i < Objs.size(); i++)
 	{
+		if (!Objs[i]->getIsShow())
+			continue;
 		if (checkCollision(box, Objs[i]->getBox()))
 		{
 			return true;
@@ -329,6 +333,11 @@ void Entity::ChangeTextShowState()
 {
 	textBox->ChangeShowState();
 	text->ChangeShowState();
+}
+
+bool Entity::getIsShow()
+{
+	return isShow;
 }
 
 void Entity::updataTextBox(int newID)
@@ -465,17 +474,6 @@ StaticObj::StaticObj(const char* file,double size)
 	isReact = false;
 }
 
-StaticObj::StaticObj(int x, int y, int tileType)
-{
-	//Get the offsets
-	mBox.x = x;
-	mBox.y = y;
-
-	//Set the collision box
-	mBox.w = TILE_WIDTH;
-	mBox.h = TILE_HEIGHT;
-
-}
 
 void StaticObj::setAlpha(Uint8 a)
 {
@@ -646,6 +644,76 @@ void MoveObj::setCamera(SDL_Rect& camera)
 	}
 }
 
+/*
+Goods::Goods(const char* file,int ID, double size, bool isPermanent):StaticObj(file, size),ObjID(ID)
+{ 
+	this->isPermanent = isPermanent;
+	isInBag = false;
+}
+
+void Goods::Render(SDL_Rect& camera)
+{
+	if (isInBag)
+		return;
+	if (checkCollision(camera, mBox) && isShow)
+	{
+		//Show the tile
+		StaticObjTex.render(mBox.x - camera.x, mBox.y - camera.y);
+	}
+}
+
+void Goods::Render()
+{
+	if (!isShow||!isInBag)
+		return;
+	StaticObjTex.render(mBox.x, mBox.y);
+}
+
+void Goods::handleEvent(SDL_Event& e)
+{
+	if (!isReact)
+		return;
+	if (!isInBag)
+	{
+		if (!checkNearBy(this->getBox(), testObj->getBox()))
+			return;
+		//If a key was pressed
+		if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+		{
+			switch (e.key.keysym.sym)
+			{
+			case SDLK_k:
+				isPressed = true;
+				break;
+
+			}
+		}
+		//If a key was released
+		else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+		{
+			switch (e.key.keysym.sym)
+			{
+				//pick up the goods
+			case SDLK_k:
+				if (isPressed)
+				{
+					isPressed = false;
+					isInBag = true;
+					//Need to change the postion of goods according to the bag!!!!
+				}
+				break;
+			}
+		}
+	}
+	else
+	{
+		//
+	}
+	
+
+}
+*/
+
 Player::Player(const char* file, int w, int h) :MoveObj(file, w, h)
 {
 	isReact = true;
@@ -788,15 +856,20 @@ int main(int argc, char* args[])
 		MoveObj NPC_2("img/role/man_3.png", 32, 48);
 		MoveObj NPC_3("img/role/woman_1.png", 32, 48);
 		StaticObj t1("img/test/hello_world.bmp");
-		Tile* tileSet[TOTAL_TILES];
+		Tile* tileSetBG[TOTAL_TILES];
+		Tile* tileSetMI[TOTAL_TILES];
+		Tile* tileSetFR[TOTAL_TILES];
+
 		timer time1;
 		LButton testBtn(68, 27, "img/text/button_1.png");
 		biaoge = new Frame("img/text/frame2.png");
 		text_1 = new Text("The DDL of the project is in this weekend!!!!",18,100);
 
 		gBGTexture.loadFromFile("img/test/testBG.png");
-		gTileTexture.loadFromFile("img/map/map.png");
-		setTiles(tileSet);
+		gTileTexture.loadFromFile("img/map/Tiled.png");
+		setTiles(tileSetBG,"img/map/ClassRoom/ButtomMap.map");
+		setTiles(tileSetMI, "img/map/ClassRoom/MiddleMap.map");
+		setTiles(tileSetFR, "img/map/ClassRoom/TopMap.map");
 
 		//Some adjustments after variable initialization
 		biaoge->ChangeShowState();
@@ -804,7 +877,7 @@ int main(int argc, char* args[])
 		time1.Setisshow();
 		biaoge->setAlpha(100);
 
-
+		testObj->SetPos(0,300);
 		NPC_1.SetPos(100, 0);
 		NPC_1.setReactFun(TestReactFun);
 		NPC_1.setTextBox("img/text/frame3.png", "img/textContent/test.txt");
@@ -851,7 +924,7 @@ int main(int argc, char* args[])
 				testBtn.handleEvent(&e);
 			}
 			//react of input
-			testObj->Move(tileSet, Objs);
+			testObj->Move(tileSetBG, Objs);
 			testObj->setCamera(camera);
 
 			//Calculate and correct fps
@@ -868,16 +941,27 @@ int main(int argc, char* args[])
 			//render 
 			for (int i = 0; i < TOTAL_TILES; ++i)
 			{
-				tileSet[i]->Render(camera);
+				tileSetBG[i]->Render(camera);
+			}
+			for (int i = 0; i < TOTAL_TILES; ++i)
+			{
+				tileSetMI[i]->Render(camera);
 			}
 			testObj->Render(camera);
-			NPC_1.Render(camera);
-			NPC_2.Render(camera);
-			NPC_3.Render(camera);
-			time1.Render(550, 0, 1);
-			testBtn.render();
-			NPC_1.textShow();
-			testObj->showAttribures();
+			//NPC_1.Render(camera);
+			//NPC_2.Render(camera);
+			//NPC_3.Render(camera);
+			for (int i = 0; i < TOTAL_TILES; ++i)
+			{
+				tileSetFR[i]->Render(camera);
+			}
+            time1.Render(550, 0, 1);
+			//testBtn.render();
+
+			//NPC_1.textShow();
+			//testObj->showAttribures();
+
+
 
 			SDL_RenderPresent(gRenderer);
 

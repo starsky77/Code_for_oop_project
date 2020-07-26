@@ -73,6 +73,7 @@ public:
 
 	SDL_Rect getBox();
 	int getcurTextID();
+	bool getIsShow();
 	
 
 protected:
@@ -117,10 +118,9 @@ public:
 	virtual void Render();
 	void SetPos(int x, int y);
 	StaticObj(const char* file, double size = 1);
-	StaticObj(int x, int y, int tileType);
 	~StaticObj();
 	void setAlpha(Uint8 a);
-private:
+protected:
 	LTexture StaticObjTex;
 };
 
@@ -166,6 +166,22 @@ protected:
 	bool isMoving;
 };
 
+/*
+class Goods :public StaticObj
+{
+public:
+	Goods(const char* fil, int ID, double size = 1, bool isPermanent);
+	~Goods() {};
+	virtual void Render(SDL_Rect& camera);
+	virtual void Render();
+	void handleEvent(SDL_Event& e);
+
+private:
+	int ObjID;
+	bool isPermanent;
+	bool isInBag;
+};
+*/
 
 class Player :public MoveObj
 {
