@@ -12,10 +12,9 @@
 
 #include"Entity.h";
 
-
 using namespace std;
 
-
+//Possible button states corresponding to buttons
 enum LButtonSprite
 {
 	BUTTON_SPRITE_MOUSE_OUT = 0,
@@ -24,47 +23,6 @@ enum LButtonSprite
 	BUTTON_SPRITE_MOUSE_UP = 3,
 	BUTTON_SPRITE_TOTAL = 4
 };
-
-
-class LButton
-{
-public:
-	//Initializes internal variables
-	LButton(int x, int y, const char* file);
-
-	//Sets top left position
-	void setPosition(int x, int y);
-
-	//Handles mouse event
-	void handleEvent(SDL_Event* e);
-
-	//Shows button sprite
-	void render();
-
-	void ChangeShowState();
-
-	void setReactFun(void (*func_react)(LButton* Obj));
-
-	void setAlpha(Uint8 a);
-
-
-private:
-	//Top left position
-	SDL_Point mPosition;
-
-	//Currently used global sprite
-	LButtonSprite mCurrentSprite;
-
-	SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
-
-	LTexture gButtonSpriteSheetTexture;
-
-	bool isShow;
-	bool isPressed;
-
-	void (*React_fun)(LButton* Obj);
-};
-
 
 
 class Frame
@@ -77,13 +35,11 @@ public:
 	void setPos(int x, int y);
 	SDL_Rect getBox();
 	Frame(const char* file);
-	Frame(){ }
+	Frame() { }
 	~Frame();
 
 private:
 	SDL_Rect rect;
-	SDL_Surface* imag = NULL;
-	SDL_Texture* tex = NULL;
 	LTexture frameTex;
 	bool isShow;
 
@@ -112,11 +68,15 @@ private:
 
 };
 
-
+//Show the clock in the game
 class timer {
 public:
 	void Render(int x, int y, int size);
 	void Setisshow();
+	void SetTime(double news, double newm, double newh);
+	double getHour();
+	double getMin();
+	double getSec();
 	timer();
 	~timer() {}
 private:

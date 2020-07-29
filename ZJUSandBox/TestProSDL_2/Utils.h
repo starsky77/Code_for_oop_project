@@ -7,6 +7,9 @@
 #include <string>
 #include<iostream>
 
+
+#include"Entity.h"
+
 using namespace std;
 
 bool init();

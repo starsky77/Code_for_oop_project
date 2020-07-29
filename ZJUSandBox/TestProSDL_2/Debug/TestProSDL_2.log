@@ -1,9 +1,21 @@
-﻿D:\Program Files\VS2019\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(467,5): warning MSB8028: 中间目录(Debug\)包含从另一个项目(TestProSDL_2.vcxproj)共享的文件。   这会导致错误的清除和重新生成行为。
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(467,5): warning MSB8028: 中间目录(Debug\)包含从另一个项目(TestProSDL_2.vcxproj)共享的文件。   这会导致错误的清除和重新生成行为。
   Entity.cpp
-C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(1,9): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
-C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.h(13,9): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
-C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(257,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(345,12): warning C4018: “>=”: 有符号/无符号不匹配
-C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(722,11): warning C4305: “=”: 从“double”到“float”截断
-C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(919,23): warning C4018: “<”: 有符号/无符号不匹配
-  TestProSDL_2.vcxproj -> C:\Users\wzq\Documents\GitHub\Code_for_oop_project\ZJUSandBox\Debug\ZJU_SandBox.exe
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(1,9): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.h(13,9): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(131,25): warning C4305: “参数”: 从“double”到“float”截断
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(201,25): warning C4305: “参数”: 从“double”到“float”截断
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(421,20): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(534,12): warning C4018: “>=”: 有符号/无符号不匹配
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(861,11): warning C4305: “=”: 从“double”到“float”截断
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(872,29): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(880,29): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(1134,23): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Entity.cpp(1195,22): warning C4018: “<”: 有符号/无符号不匹配
+  Text.cpp
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.cpp(1,9): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.h(13,9): warning C4067: 预处理器指令后有意外标记 - 应输入换行符
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.cpp(368,9): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.cpp(369,9): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\TestProSDL_2\Text.cpp(370,9): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+  正在生成代码...
+  TestProSDL_2.vcxproj -> C:\Users\39968\Documents\GitHub\Code_for_oop_project\ZJUSandBox\Debug\ZJU_SandBox.exe

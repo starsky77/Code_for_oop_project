@@ -1,0 +1,4 @@
+Teacher: I think you still have a lot of room for improvement in data structure.
+Me: Ah, what do I need to do?
+Teacher: You need to contact more. There are many problem sets on PTA, you can try this.
+Tip:After hard practice, your level has improved, but high-intensity practice makes your mood drop.

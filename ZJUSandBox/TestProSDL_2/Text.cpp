@@ -27,6 +27,12 @@ LButton::LButton(int x, int y, const char* file)
 
 	isShow = false;
 	isPressed = false;
+	isReact = false;
+}
+
+LButton::~LButton()
+{
+	gButtonSpriteSheetTexture.free();
 }
 
 void LButton::setPosition(int x, int y)
@@ -45,8 +51,13 @@ void LButton::setAlpha(Uint8 a)
 	gButtonSpriteSheetTexture.setAlpha(a);
 }
 
+void LButton::ChangeReactState()
+{
+	isReact = isReact ? false : true;
+}
 
-void LButton::handleEvent(SDL_Event* e)
+
+void LButton::handleEvent(SDL_Event* e, Entity* Obj)
 {
 	if (!isShow)
 		return;
@@ -106,7 +117,7 @@ void LButton::handleEvent(SDL_Event* e)
 				if (isPressed)
 				{
 					isPressed = 0;
-					React_fun(this);
+					React_fun(this, Obj);
 				}
 				break;
 			}
@@ -123,11 +134,13 @@ void LButton::render()
 }
 
 
-void LButton::setReactFun(void (*func_react)(LButton* Obj))
+void LButton::setReactFun(void (*func_react)(LButton* Btn, Entity* Obj))
 {
 	React_fun = func_react;
 
 }
+
+
 
 Frame::Frame(const char* file)
 {
@@ -146,7 +159,6 @@ void Frame::Render()
 {
 	if (!isShow)
 		return;
-
 
 	frameTex.render(rect.x, rect.y);
 }
@@ -184,15 +196,14 @@ void Frame::ChangeShowState()
 
 Frame::~Frame()
 {
-	SDL_FreeSurface(imag);
-	SDL_DestroyTexture(tex);
+	frameTex.free();
 }
 
 
 Text::Text(const string s,int size,Uint32 width)
 {
 	char* st1 = const_cast<char*>(s.c_str());
-	TTF_Font* font = TTF_OpenFont("ttf/English_1.ttf", size);
+	TTF_Font* font = TTF_OpenFont("ttf/Chinese_2.ttf", size);
 	SDL_Surface* textSurface = TTF_RenderText_Blended_Wrapped(font, st1,color, width);
 	//SDL_Surface* textSurface = TTF_RenderText_Solid(font, s, color);
 	isShow = false;
@@ -253,6 +264,7 @@ Text::Text(const string s,int size)
 			rect.h = mHeight;
 		}
 	}
+	TTF_CloseFont(font);
 }
 
 void Text::ChangeShowState()
@@ -270,12 +282,11 @@ void Text::Render(int x, int y)
 {
 	if (!isShow)
 		return;
-	SDL_Rect tmp;
-	tmp.x = x;
-	tmp.y = y;
-	tmp.h = mHeight;
-	tmp.w = mWidth;
-	SDL_RenderCopy(gRenderer, mTexture, NULL, &tmp);
+	rect.x = x;
+	rect.y = y;
+	rect.h = mHeight;
+	rect.w = mWidth;
+	SDL_RenderCopy(gRenderer, mTexture, NULL, &rect);
 }
 
 void Text::Render()
@@ -294,18 +305,46 @@ void Text::setPos(int x, int y)
 
 Text::~Text()
 {
-
+	if (mTexture != NULL)
+	{
+		SDL_DestroyTexture(mTexture);
+		mTexture = NULL;
+		mWidth = 0;
+		mHeight = 0;
+	}
 }
 
 timer::timer()
 {
 	second = minute = hour = 0;
-	isshow = 0;
+	isshow = false;
 }
 
 void timer::Setisshow()
 {
-	isshow = 1 - isshow;
+	isshow = isshow ? false : true;
+}
+
+void timer::SetTime(double news, double newm, double newh)
+{
+	second = news;
+	minute = newm;
+	hour = newh;
+}
+
+double timer::getHour()
+{
+	return hour;
+}
+
+double timer::getMin()
+{
+	return minute;
+}
+
+double timer::getSec()
+{
+	return second;
 }
 
 void timer::Render(int x, int y, int size)
@@ -322,6 +361,10 @@ void timer::Render(int x, int y, int size)
 		minute = minute - 60;
 		hour++;
 	}
+	if (hour >= 24)
+	{
+		hour = 0;
+	}
 	int ss = second;
 	int mm = minute;
 	int hh = hour;
@@ -331,9 +374,12 @@ void timer::Render(int x, int y, int size)
 	sprintf_s(s, "%02d", ss);
 	sprintf_s(m, "%02d", mm);
 	sprintf_s(h, "%02d", hh);
-	Text s1(s,18);
-	Text m1(m,18);
-	Text h1(h,18);
+	Text s1(s, size);
+	Text m1(m, size);
+	Text h1(h, size);
+	s1.ChangeShowState();
+	m1.ChangeShowState();
+	h1.ChangeShowState();
 	s1.Render(x + 50, y);
 	m1.Render(x + 25, y);
 	h1.Render(x, y);
